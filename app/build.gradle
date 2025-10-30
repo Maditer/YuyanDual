@@ -3,6 +3,11 @@ plugins {
     id 'kotlin-android'
 }
 
+// 强制 Kotlin 使用 JDK 17 工具链
+kotlin {
+    jvmToolchain(17)
+}
+
 android {
     compileSdk 36
     namespace 'com.yuyan'
@@ -35,13 +40,17 @@ android {
         }
     }
 
+    // 读取 keystore 配置（如果存在）
+    def keystorePropsFile = rootProject.file("keystore/keystore.properties")
+    def keystoreProps = new Properties()
+    if (keystorePropsFile.exists()) {
+        keystoreProps.load(new FileInputStream(keystorePropsFile))
+    }
+
     signingConfigs {
-        release {
-            def keystoreFile = rootProject.file("keystore/keystore.properties")
-            if (keystoreFile.exists()) {
-                def keystoreProps = new Properties()
-                keystoreProps.load(new FileInputStream(keystoreFile))
-                storeFile file("${rootProject.projectDir}/keystore/" + keystoreProps["storeFile"])
+        if (keystorePropsFile.exists()) {
+            release {
+                storeFile file("${rootProject.projectDir}/keystore/" + keystoreProps["storeFile"]) 
                 storePassword keystoreProps["storePassword"]
                 keyAlias keystoreProps["keyAlias"]
                 keyPassword keystoreProps["keyPassword"]
@@ -51,7 +60,6 @@ android {
         }
     }
 
-    //多渠道打包
     flavorDimensions = ["default"]
     productFlavors {
         online {
@@ -60,23 +68,28 @@ android {
         }
         offline {
             dimension "default"
-            applicationIdSuffix  ".offline"
+        }
+        dualscreen {
+            dimension "default"
+            applicationIdSuffix  ".online"
         }
     }
 
     buildTypes {
         release {
             // 混淆
-            minifyEnabled true
-            shrinkResources true
+            minifyEnabled false
+            shrinkResources false
             applicationIdSuffix  ".release"
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard.cfg'
-            signingConfig signingConfigs.release
+            if (keystorePropsFile.exists()) {
+                signingConfig signingConfigs.release
+            }
         }
 
         debug {
             applicationIdSuffix ".debug"
-            signingConfig signingConfigs.release
+            // 不使用 release 签名；使用默认 debug keystore
         }
 
     }
@@ -84,6 +97,10 @@ android {
     compileOptions {
         sourceCompatibility 17
         targetCompatibility 17
+    }
+    // 强制 Kotlin 编译目标与 Java 一致
+    kotlinOptions {
+        jvmTarget = '17'
     }
     android.applicationVariants.configureEach { variant ->
         variant.outputs.configureEach {
