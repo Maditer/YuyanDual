@@ -70,18 +70,6 @@ android {
 
     flavorDimensions = ["default"]
     productFlavors {
-        online {
-            dimension "default"
-            applicationIdSuffix  ".online"
-            // 暴露SDK资源到app：图标
-            resValue("drawable", "app_icon", "@drawable/ic_sdk_launcher")
-        }
-        offline {
-            dimension "default"
-            // SDK中标记离线模式
-            buildConfigField "Boolean", "offline", "true"
-            resValue("drawable", "app_icon", "@drawable/ic_sdk_launcher_debug")
-        }
         dualscreen {
             dimension "default"
             applicationIdSuffix  ".online"
@@ -126,27 +114,13 @@ android {
         buildConfig true
     }
 
-    // 直接聚合SDK源码与资源，消除模块嵌套
+    // 使用默认的 app 目录结构，仅保留 dualscreen 渠道
     sourceSets {
         main {
-            java.srcDirs += ['../yuyansdk/src/main/java']
-            res.srcDirs += ['../yuyansdk/src/main/res']
-            assets.srcDirs += ['../yuyansdk/src/main/assets']
-            jniLibs.srcDirs = ['../yuyansdk/libs']
-        }
-        offline {
-            jniLibs.srcDirs += ['../yuyansdk/src/offline/libs']
-            manifest.srcFile('../yuyansdk/src/offline/AndroidManifest.xml')
-            res.srcDirs += ['../yuyansdk/src/offline/res']
-        }
-        online {
-            jniLibs.srcDirs += ['../yuyansdk/src/online/libs']
-            manifest.srcFile('../yuyansdk/src/online/AndroidManifest.xml')
-            res.srcDirs += ['../yuyansdk/src/online/res']
+            jniLibs.srcDirs = ['src/main/jniLibs']
         }
         dualscreen {
-            manifest.srcFile('../yuyansdk/src/dualscreen/AndroidManifest.xml')
-            res.srcDirs += ['../yuyansdk/src/dualscreen/res']
+            manifest.srcFile('src/dualscreen/AndroidManifest.xml')
         }
     }
 

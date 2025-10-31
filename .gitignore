@@ -1,15 +1,33 @@
+# IDE & OS
 *.iml
-.gradle/
-local.properties
-.DS_Store
-build/
-captures/
-.externalNativeBuild
 .idea/
-gradlew
-gradlew.bat
-gradle/wrapper/
+.DS_Store
+Thumbs.db
+
+# Gradle caches & build outputs
+.gradle/
+**/build/
+**/.externalNativeBuild/
+**/.cxx/
+
+# Local config & keystore (do not commit secrets)
+local.properties
 *.jks
+keystore/
 keystore/keystore.properties
-/.kotlin
+
+# Logs
 *.log
+
+# APK/Bundle outputs placed outside build (if any)
+*.apk
+*.ap_
+*.aab
+
+# Kotlin compiler caches
+/.kotlin/
+
+# Do NOT ignore Gradle Wrapper — keep reproducible builds
+# gradlew
+# gradlew.bat
+# gradle/wrapper/
