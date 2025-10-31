@@ -62,13 +62,6 @@ android {
 
     flavorDimensions = ["default"]
     productFlavors {
-        online {
-            dimension "default"
-            applicationIdSuffix  ".online"
-        }
-        offline {
-            dimension "default"
-        }
         dualscreen {
             dimension "default"
             applicationIdSuffix  ".online"
