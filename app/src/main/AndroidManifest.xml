@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- 从SDK合并：权限与查询约束 -->
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- 语音识别权限 -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <queries>
         <intent>
             <action android:name="android.intent.action.GET_CONTENT"/>
@@ -37,10 +40,12 @@
         <!-- 从SDK合并：设置与启动入口 -->
         <activity
             android:name="com.yuyan.imemodule.ui.activity.SettingsActivity"
-            android:exported="true" />
+            android:exported="true"
+            android:excludeFromRecents="true" />
         <activity
             android:name="com.yuyan.imemodule.ui.activity.LauncherActivity"
-            android:exported="true">
+            android:exported="true"
+            android:excludeFromRecents="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <action android:name="android.intent.action.VIEW" />
@@ -61,6 +66,14 @@
             android:name="com.yuyan.imemodule.libs.cropper.CropImageActivity"
             android:exported="false"
             android:theme="@style/Theme.CropActivityTheme"/>
+        
+        <!-- 权限请求 Activity -->
+        <activity
+            android:name="com.yuyan.imemodule.ui.activity.PermissionRequestActivity"
+            android:exported="false"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:excludeFromRecents="true"
+            android:noHistory="true"/>
 
         <provider
             android:name="com.yuyan.imemodule.libs.cropper.CropFileProvider"

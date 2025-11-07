@@ -137,11 +137,27 @@ class InputView(context: Context, service: ImeService) : LifecycleRelativeLayout
         mLlKeyboardBottomHolder.removeAllViews()
         mLlKeyboardBottomHolder.layoutParams.width = EnvironmentSingleton.instance.inputAreaWidth
         mInputKeyboardContainer.layoutParams.width = EnvironmentSingleton.instance.inputAreaWidth
+        val enableFloat = when (EnvironmentSingleton.instance.currentDisplayState) {
+            EnvironmentSingleton.DisplayState.SecondaryFullscreen -> getInstance().internal.keyboardModeFloatFullscreen.getValue()
+            EnvironmentSingleton.DisplayState.SecondaryLandscape -> getInstance().internal.keyboardModeFloatLandscape.getValue()
+            else -> getInstance().internal.keyboardModeFloat.getValue()
+        }
+        EnvironmentSingleton.instance.keyboardModeFloat = enableFloat
+        
+        val prefsInternal = getInstance().internal
         if(EnvironmentSingleton.instance.keyboardModeFloat){
-            mBottomPaddingKey = (if(EnvironmentSingleton.instance.isLandscape) getInstance().internal.keyboardBottomPaddingLandscapeFloat
-                else getInstance().internal.keyboardBottomPaddingFloat)
-            mRightPaddingKey = (if(EnvironmentSingleton.instance.isLandscape) getInstance().internal.keyboardRightPaddingLandscapeFloat
-            else getInstance().internal.keyboardRightPaddingFloat)
+            mBottomPaddingKey = when (EnvironmentSingleton.instance.currentDisplayState) {
+                EnvironmentSingleton.DisplayState.PrimaryPortrait -> prefsInternal.bottomPaddingPrimaryPortrait
+                EnvironmentSingleton.DisplayState.SecondaryPortrait -> prefsInternal.bottomPaddingSecondaryPortrait
+                EnvironmentSingleton.DisplayState.SecondaryLandscape -> prefsInternal.bottomPaddingSecondaryLandscape
+                EnvironmentSingleton.DisplayState.SecondaryFullscreen -> prefsInternal.bottomPaddingSecondaryFullscreen
+            }
+            mRightPaddingKey = when (EnvironmentSingleton.instance.currentDisplayState) {
+                EnvironmentSingleton.DisplayState.PrimaryPortrait -> prefsInternal.rightPaddingPrimaryPortrait
+                EnvironmentSingleton.DisplayState.SecondaryPortrait -> prefsInternal.rightPaddingSecondaryPortrait
+                EnvironmentSingleton.DisplayState.SecondaryLandscape -> prefsInternal.rightPaddingSecondaryLandscape
+                EnvironmentSingleton.DisplayState.SecondaryFullscreen -> prefsInternal.rightPaddingSecondaryFullscreen
+            }
             bottomPadding = mBottomPaddingKey.getValue()
             rightPadding = mRightPaddingKey.getValue()
             mSkbRoot.bottomPadding = 0
@@ -155,12 +171,22 @@ class InputView(context: Context, service: ImeService) : LifecycleRelativeLayout
             mLlKeyboardBottomHolder.addView(mIvKeyboardMove)
             mIvKeyboardMove.setOnTouchListener { _, event -> onMoveKeyboardEvent(event) }
         } else {
-            // 悬浮与全面屏优化均移除：统一使用系统导航栏高度
             mLlKeyboardBottomHolder.minimumHeight = EnvironmentSingleton.instance.systemNavbarWindowsBottom
             bottomPadding = 0
             rightPadding = 0
-            mBottomPaddingKey =  getInstance().internal.keyboardBottomPadding
-            mRightPaddingKey =  getInstance().internal.keyboardRightPadding
+            val prefsInternal = getInstance().internal
+            mBottomPaddingKey = when (EnvironmentSingleton.instance.currentDisplayState) {
+                EnvironmentSingleton.DisplayState.PrimaryPortrait -> prefsInternal.bottomPaddingPrimaryPortrait
+                EnvironmentSingleton.DisplayState.SecondaryPortrait -> prefsInternal.bottomPaddingSecondaryPortrait
+                EnvironmentSingleton.DisplayState.SecondaryLandscape -> prefsInternal.bottomPaddingSecondaryLandscape
+                EnvironmentSingleton.DisplayState.SecondaryFullscreen -> prefsInternal.bottomPaddingSecondaryFullscreen
+            }
+            mRightPaddingKey = when (EnvironmentSingleton.instance.currentDisplayState) {
+                EnvironmentSingleton.DisplayState.PrimaryPortrait -> prefsInternal.rightPaddingPrimaryPortrait
+                EnvironmentSingleton.DisplayState.SecondaryPortrait -> prefsInternal.rightPaddingSecondaryPortrait
+                EnvironmentSingleton.DisplayState.SecondaryLandscape -> prefsInternal.rightPaddingSecondaryLandscape
+                EnvironmentSingleton.DisplayState.SecondaryFullscreen -> prefsInternal.rightPaddingSecondaryFullscreen
+            }
             mSkbRoot.bottomPadding = mBottomPaddingKey.getValue()
             mSkbRoot.rightPadding = mRightPaddingKey.getValue()
             updateTheme()

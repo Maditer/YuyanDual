@@ -16,6 +16,7 @@ import com.yuyan.imemodule.prefs.behavior.DoublePinyinSchemaMode
 // import com.yuyan.imemodule.prefs.behavior.FullDisplayKeyMode // 已移除
 import com.yuyan.imemodule.prefs.behavior.HalfWidthSymbolsMode
 import com.yuyan.imemodule.prefs.behavior.KeyboardOneHandedMod
+import com.yuyan.imemodule.prefs.behavior.VoiceLanguageMode
 import com.yuyan.imemodule.utils.DevicesUtils
 
 
@@ -38,12 +39,22 @@ class AppPrefs(private val sharedPreferences: SharedPreferences) {
         val heightRatioSecondaryFullscreen = float("keyboard_height_ratio_secondary_fullscreen", 0.7f)
         val keyboardModeFloat = bool("keyboard_mode_float", false)     // 悬浮模式
         val keyboardModeFloatLandscape = bool("keyboard_mode_float_landscape", false)// 悬浮模式:横屏
+        val keyboardModeFloatFullscreen = bool("keyboard_mode_float_fullscreen", false)// 悬浮模式:副屏全屏
         val keyboardBottomPaddingFloat = int("keyboard_padding_bottom", DevicesUtils.dip2px(100))     //竖屏悬浮模式底边距
         val keyboardRightPaddingFloat = int("keyboard_padding_right", DevicesUtils.dip2px(20))     //竖屏悬浮模式右边距
         val keyboardBottomPaddingLandscapeFloat = int("keyboard_padding_bottom_landscape", DevicesUtils.dip2px(50))     //横屏悬浮模式底边距
         val keyboardRightPaddingLandscapeFloat = int("keyboard_padding_right_landscape", DevicesUtils.dip2px(20))     //横屏悬浮模式右边距
         val keyboardBottomPadding = int("keyboard_padding_bottom_normal", DevicesUtils.dip2px(0))     //竖屏非悬浮底边距
         val keyboardRightPadding = int("keyboard_padding_right_normal", DevicesUtils.dip2px(0))     //竖屏非悬浮右边距
+        // 四种显示状态的独立底边距和右边距
+        val bottomPaddingPrimaryPortrait = int("bottom_padding_primary_portrait", DevicesUtils.dip2px(0))
+        val rightPaddingPrimaryPortrait = int("right_padding_primary_portrait", DevicesUtils.dip2px(0))
+        val bottomPaddingSecondaryPortrait = int("bottom_padding_secondary_portrait", DevicesUtils.dip2px(0))
+        val rightPaddingSecondaryPortrait = int("right_padding_secondary_portrait", DevicesUtils.dip2px(0))
+        val bottomPaddingSecondaryLandscape = int("bottom_padding_secondary_landscape", DevicesUtils.dip2px(0))
+        val rightPaddingSecondaryLandscape = int("right_padding_secondary_landscape", DevicesUtils.dip2px(0))
+        val bottomPaddingSecondaryFullscreen = int("bottom_padding_secondary_fullscreen", DevicesUtils.dip2px(0))
+        val rightPaddingSecondaryFullscreen = int("right_padding_secondary_fullscreen", DevicesUtils.dip2px(0))
         val clipboardUpdateTime = long("clipboard_update_time", 0)     //剪切板更新时间
         val clipboardUpdateContent = string("clipboard_update_content","")     //剪切板更新内容
         val fullDisplayKeyboardEnable = bool("full_display_keyboard_enable", false)     //全面屏键盘优化（已停用）
@@ -206,7 +217,25 @@ class AppPrefs(private val sharedPreferences: SharedPreferences) {
     }
 
     inner class Voice : ManagedPreferenceCategory(R.string.setting_ime_input, sharedPreferences) {
-//        val titleChinese = category(R.string.chinese_input_setting)
+        val voiceInputEnabled = switch(R.string.voice_input_enabled, "voice_input_enabled", true, R.string.voice_input_enabled_tips)
+        val voiceInputAutoCommit = switch(R.string.voice_input_auto_commit, "voice_input_auto_commit", true, R.string.voice_input_auto_commit_tips)
+        val voiceInputShowPartial = switch(R.string.voice_input_show_partial, "voice_input_show_partial", false, R.string.voice_input_show_partial_tips)
+        val voiceInputLanguage = list(
+            R.string.voice_input_language,
+            "voice_input_language",
+            VoiceLanguageMode.BILINGUAL,
+            VoiceLanguageMode,
+            listOf(
+                VoiceLanguageMode.BILINGUAL,
+                VoiceLanguageMode.CHINESE_ONLY,
+                VoiceLanguageMode.ENGLISH_ONLY
+            ),
+            listOf(
+                R.string.voice_language_bilingual,
+                R.string.voice_language_chinese_only,
+                R.string.voice_language_english_only
+            )
+        )
     }
 
     inner class Other : ManagedPreferenceCategory(R.string.setting_ime_other, sharedPreferences) {

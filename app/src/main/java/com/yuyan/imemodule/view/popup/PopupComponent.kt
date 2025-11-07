@@ -66,6 +66,27 @@ class PopupComponent private constructor(){
         showingEntryUi = popup
     }
 
+    /**
+     * 显示权限请求弹窗，包含可点击的按钮
+     */
+    fun showPermissionRequestPopup(
+        title: String,
+        buttonText: String,
+        bounds: Rect,
+        onButtonClick: () -> Unit
+    ) {
+        val popupWidth = EnvironmentSingleton.instance.skbWidth.div(3)
+        val keyboardUi = PopupPermissionRequestUi(bounds, { dismissPopup() }, popupRadius, popupWidth, title, buttonText, onButtonClick)
+        root.apply {
+            add(keyboardUi.root, lParams {
+                bottomMargin = EnvironmentSingleton.instance.skbAreaHeight - (bounds.top + bounds.bottom)/2
+                leftMargin = EnvironmentSingleton.instance.leftMarginWidth + bounds.left + keyboardUi.offsetX
+            })
+        }
+        dismissPopup()
+        showingContainerUi = keyboardUi
+    }
+
     fun showKeyboard(label: String, labelSmall: String, bounds: Rect) {
         showingEntryUi?.setText("") ?: showPopup("", bounds)
         var labels =  (PopupSmallPreset[labelSmall] ?: emptyArray<String>()).plus(PopupPreset[label] ?: emptyArray())

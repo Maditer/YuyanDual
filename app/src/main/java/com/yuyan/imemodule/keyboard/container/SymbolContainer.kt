@@ -6,9 +6,11 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
+import android.util.Log
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.MotionEvent
+import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -28,6 +30,7 @@ import com.yuyan.imemodule.database.entry.UsedSymbol
 import com.yuyan.imemodule.entity.keyboard.SoftKey
 import com.yuyan.imemodule.manager.InputModeSwitcherManager
 import com.yuyan.imemodule.prefs.behavior.SymbolMode
+import com.yuyan.imemodule.singleton.EnvironmentSingleton
 import com.yuyan.imemodule.utils.DevicesUtils
 import com.yuyan.imemodule.keyboard.InputView
 import com.yuyan.imemodule.keyboard.KeyboardManager
@@ -66,6 +69,7 @@ class SymbolContainer(context: Context, inputView: InputView) : BaseContainer(co
         private const val MSG_REPEAT = 3
         private const val REPEAT_INTERVAL = 50L // ~20 keys per second
         private const val REPEAT_START_DELAY = 400L
+        private const val TAG = "SymbolBarSize"
     }
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
@@ -95,6 +99,39 @@ class SymbolContainer(context: Context, inputView: InputView) : BaseContainer(co
             pressKeyBackground.setCornerRadius(keyRadius.toFloat()) // 设置圆角半径
         }
         val mLLSymbolType = LayoutInflater.from(getContext()).inflate(R.layout.sdk_view_symbols_emoji_type, this, false) as LinearLayout
+        
+        // 动态设置整个底部栏高度为候选栏高度，并添加水平和底部边距
+        val symbolBarHeight = EnvironmentSingleton.instance.heightForCandidates
+        val keyMargin = EnvironmentSingleton.instance.keyXMargin
+        val keyBottomMargin = EnvironmentSingleton.instance.keyYMargin
+        
+        Log.d(TAG, "========== Symbol Bar Size Calculation ==========")
+        Log.d(TAG, "symbolBarHeight (heightForCandidates): $symbolBarHeight px")
+        Log.d(TAG, "keyMargin (keyXMargin): $keyMargin px")
+        Log.d(TAG, "bottomMargin (keyYMargin): $keyBottomMargin px")
+        
+        // 使用 lParams (来自 splitties) 创建 ConstraintLayout.LayoutParams，并设置底部边距
+        val layoutParams = lParams(matchParent, wrapContent) {
+            bottomOfParent(keyBottomMargin)
+        }
+        mLLSymbolType.layoutParams = layoutParams
+        mLLSymbolType.setPadding(keyMargin, 0, keyMargin, 0)
+        
+        Log.d(TAG, "Container layoutParams: width=MATCH_PARENT, height=WRAP_CONTENT")
+        Log.d(TAG, "Container layoutParams bottomOfParent margin: $keyBottomMargin")
+        Log.d(TAG, "Container layoutParams class: ${layoutParams.javaClass.simpleName}")
+        Log.d(TAG, "Container padding: left=$keyMargin, right=$keyMargin")
+        
+        // 添加布局完成后的实际位置日志
+        mLLSymbolType.post {
+            Log.d(TAG, "Container post-layout: y=${mLLSymbolType.y}, bottom=${mLLSymbolType.bottom}, height=${mLLSymbolType.height}")
+            Log.d(TAG, "Container parent: ${mLLSymbolType.parent?.javaClass?.simpleName}")
+            val lp = mLLSymbolType.layoutParams
+            if (lp is ViewGroup.MarginLayoutParams) {
+                Log.d(TAG, "Container actual margins: left=${lp.leftMargin}, top=${lp.topMargin}, right=${lp.rightMargin}, bottom=${lp.bottomMargin}")
+            }
+        }
+        
         tabLayout = mLLSymbolType.findViewById<TabLayout?>(R.id.tab_symbols_emoji_type).apply {
             addOnTabSelectedListener(object :TabLayout.OnTabSelectedListener{
                 override fun onTabSelected(tab: TabLayout.Tab?) {
@@ -105,6 +142,11 @@ class SymbolContainer(context: Context, inputView: InputView) : BaseContainer(co
                 }
                 override fun onTabReselected(tab: TabLayout.Tab?) {}
             })
+            
+            // 记录 TabLayout 的状态
+            post {
+                Log.d(TAG, "TabLayout width=${this.width}, height=${this.height}, childCount=${this.childCount}")
+            }
         }
         mVPSymbolsView = ViewPager2(context)
         mLLSymbolType.visibility = VISIBLE
@@ -112,6 +154,14 @@ class SymbolContainer(context: Context, inputView: InputView) : BaseContainer(co
         ivReturn.drawable.setTint(activeTheme.keyTextColor)
         ivDelete = mLLSymbolType.findViewById(R.id.iv_symbols_emoji_type_delete)
         ivDelete.drawable.setTint(activeTheme.keyTextColor)
+        
+        // 动态设置左右按钮尺寸：返回和删除按钮宽度为候选栏高度的 1.82 倍（1.3 * 1.4）
+        val sideButtonWidth = (symbolBarHeight * 1.82f).toInt()
+        ivReturn.layoutParams = LinearLayout.LayoutParams(sideButtonWidth, LinearLayout.LayoutParams.MATCH_PARENT)
+        ivDelete.layoutParams = LinearLayout.LayoutParams(sideButtonWidth, LinearLayout.LayoutParams.MATCH_PARENT)
+        
+        Log.d(TAG, "Side buttons (Return/Delete) width: $sideButtonWidth px ($symbolBarHeight * 1.82)")
+        
         val isKeyBorder = ThemeManager.prefs.keyBorder.getValue()
         if (isKeyBorder) {
             val keyRadius = ThemeManager.prefs.keyRadius.getValue()
@@ -158,9 +208,8 @@ class SymbolContainer(context: Context, inputView: InputView) : BaseContainer(co
             }
             true
         }
-        add(mLLSymbolType, lParams(matchParent, wrapContent){
-            bottomOfParent(0)
-        })
+        // 使用之前设置好的 layoutParams（包含底部边距）添加到父容器
+        add(mLLSymbolType, layoutParams)
         add(mVPSymbolsView, lParams(matchParent, matchParent){
             bottomToTop = mLLSymbolType.id
         })
@@ -213,12 +262,36 @@ class SymbolContainer(context: Context, inputView: InputView) : BaseContainer(co
         val data = mSymbolsEmoji.keys.toList()
         TabLayoutMediator(tabLayout, mVPSymbolsView) { tab, position ->
             tab.view.background = null
+            
+            // 不再移除 Tab view 的 padding，保留 XML 设置的间距
+            // tab.view.setPadding(0, 0, 0, 0) // 删除这行
+            
+            // Tab 宽度为候选栏高度的 1.19 倍（0.85 * 1.4），比两侧按钮窄
+            val tabSize = (EnvironmentSingleton.instance.heightForCandidates * 1.19f).toInt()
+            
+            if (position == 0) {
+                Log.d(TAG, "Symbol Tab icon size: $tabSize px (${EnvironmentSingleton.instance.heightForCandidates} * 1.19)")
+            }
+            
             tab.setCustomView(ImageView(context).apply {
+                layoutParams = ViewGroup.LayoutParams(tabSize, tabSize)
+                scaleType = ImageView.ScaleType.CENTER_INSIDE
+                setPadding(0, 0, 0, 0)
                 setImageDrawable(ContextCompat.getDrawable(context,data[position]).apply {
                     this?.setTint(activeTheme.keyTextColor)
                 })
+                
+                // 添加布局完成后的实际尺寸日志
+                post {
+                    if (position == 0) {
+                        Log.d(TAG, "Emoji Tab[0] ImageView size: width=${this.width}, height=${this.height}")
+                        Log.d(TAG, "Emoji Tab[0] ImageView padding: left=${this.paddingLeft}, top=${this.paddingTop}, right=${this.paddingRight}, bottom=${this.paddingBottom}")
+                        Log.d(TAG, "Emoji Tab[0] view size: width=${tab.view.width}, height=${tab.view.height}")
+                        Log.d(TAG, "Emoji Tab[0] view padding: left=${tab.view.paddingLeft}, top=${tab.view.paddingTop}, right=${tab.view.paddingRight}, bottom=${tab.view.paddingBottom}")
+                        Log.d(TAG, "========================================")
+                    }
+                }
             })
-            tab.view.setPadding(dp(5))
         }.attach()
         mVPSymbolsView.currentItem = 0
     }
@@ -248,12 +321,36 @@ class SymbolContainer(context: Context, inputView: InputView) : BaseContainer(co
         val data = mSymbolsEmoji.keys.toList()
         TabLayoutMediator(tabLayout, mVPSymbolsView) { tab, position ->
             tab.view.background = null
+            
+            // 不再移除 Tab view 的 padding，保留 XML 设置的间距
+            // tab.view.setPadding(0, 0, 0, 0) // 删除这行
+            
+            // Tab 宽度为候选栏高度的 1.19 倍（0.85 * 1.4），比两侧按钮窄
+            val tabSize = (EnvironmentSingleton.instance.heightForCandidates * 1.19f).toInt()
+            
+            if (position == 0) {
+                Log.d(TAG, "Symbol Tab icon size: $tabSize px (${EnvironmentSingleton.instance.heightForCandidates} * 1.19)")
+            }
+            
             tab.setCustomView(ImageView(context).apply {
+                layoutParams = ViewGroup.LayoutParams(tabSize, tabSize)
+                scaleType = ImageView.ScaleType.CENTER_INSIDE
+                setPadding(0, 0, 0, 0)
                 setImageDrawable(ContextCompat.getDrawable(context,data[position]).apply {
                     this?.setTint(activeTheme.keyTextColor)
                 })
+                
+                // 添加布局完成后的实际尺寸日志
+                post {
+                    if (position == 0) {
+                        Log.d(TAG, "Emoji Tab[0] ImageView size: width=${this.width}, height=${this.height}")
+                        Log.d(TAG, "Emoji Tab[0] ImageView padding: left=${this.paddingLeft}, top=${this.paddingTop}, right=${this.paddingRight}, bottom=${this.paddingBottom}")
+                        Log.d(TAG, "Emoji Tab[0] view size: width=${tab.view.width}, height=${tab.view.height}")
+                        Log.d(TAG, "Emoji Tab[0] view padding: left=${tab.view.paddingLeft}, top=${tab.view.paddingTop}, right=${tab.view.paddingRight}, bottom=${tab.view.paddingBottom}")
+                        Log.d(TAG, "========================================")
+                    }
+                }
             })
-            tab.view.setPadding(dp(5))
         }.attach()
     }
 

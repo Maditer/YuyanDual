@@ -70,20 +70,10 @@ class EnvironmentSingleton private constructor() {
         holderWidth = 0
         skbWidth = screenWidthVertical
 
-        var candidatesHeightRatio = AppPrefs.getInstance().internal.candidatesHeightRatio.getValue()
         if(isLandscape){
             inputAreaWidth = mScreenWidth
             skbWidth = inputAreaWidth
-            candidatesHeightRatio = AppPrefs.getInstance().internal.candidatesHeightRatioLandscape.getValue()
         }
-        heightForcomposing = (screenHeightVertical * candidatesHeightRatio *
-                AppPrefs.getInstance().keyboardSetting.candidateTextSize.getValue() / 100f).toInt()
-        heightForCandidates = (heightForcomposing * 1.9).toInt()
-        heightForCandidatesArea = (heightForcomposing * 2.9).toInt()
-        composingTextSize = DevicesUtils.px2sp (heightForcomposing)
-        candidateTextSize = DevicesUtils.px2sp (heightForCandidates)
-        heightForFullDisplayBar = 0
-        heightForKeyboardMove = 0
 
         // 根据显示状态选择独立的高度比例；全屏状态默认按候选区以下区域自动填充，当设置自定义比例 (>0) 时优先生效
         val prefsInternal = AppPrefs.getInstance().internal
@@ -99,6 +89,17 @@ class EnvironmentSingleton private constructor() {
         keyboardHeightRatio = ratio
 
         skbHeight = (screenHeightVertical * keyboardHeightRatio).toInt()
+
+        // 候选栏高度改为基于键盘高度计算，统一使用 0.1 比例
+        val candidatesHeightRatio = 0.1f
+        heightForcomposing = (skbHeight * candidatesHeightRatio *
+                AppPrefs.getInstance().keyboardSetting.candidateTextSize.getValue() / 100f).toInt()
+        heightForCandidates = (heightForcomposing * 1.9).toInt()
+        heightForCandidatesArea = (heightForcomposing * 2.9).toInt()
+        composingTextSize = DevicesUtils.px2sp (heightForcomposing)
+        candidateTextSize = DevicesUtils.px2sp (heightForCandidates)
+        heightForFullDisplayBar = 0
+        heightForKeyboardMove = 0
 
         val keyboardFontSizeRatio = prefs.keyboardFontSize.getValue()/100f
         keyTextSize = (skbHeight * 0.06f * keyboardFontSizeRatio).toInt()
@@ -121,9 +122,10 @@ class EnvironmentSingleton private constructor() {
             }
         }
 
-    var keyboardModeFloat:Boolean
-        get() = false
-        set(@Suppress("UNUSED_PARAMETER") isFloatMode) { /* 悬浮键盘禁用 */ }
+    var keyboardModeFloat:Boolean = false
+        set(isFloatMode) {
+            field = isFloatMode
+        }
 
     val skbAreaHeight:Int
         get() = instance.inputAreaHeight + AppPrefs.getInstance().internal.keyboardBottomPadding.getValue() + instance.systemNavbarWindowsBottom

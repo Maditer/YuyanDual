@@ -226,4 +226,21 @@
     <!-- 新增：双屏设置 -->
     <string name="setting_dual_screen">双屏</string>
     <string name="dual_force_fullscreen_primary">主屏激活时强制全屏</string>
+
+    <!-- 语音识别设置 -->
+    <string name="voice_input_enabled">启用语音输入</string>
+    <string name="voice_input_enabled_tips">长按空格键启动语音识别</string>
+    <string name="voice_input_auto_commit">自动提交识别结果</string>
+    <string name="voice_input_auto_commit_tips">识别完成后自动输入文字</string>
+    <string name="voice_input_show_partial">显示实时识别结果</string>
+    <string name="voice_input_show_partial_tips">在键盘上方显示识别过程中的文字</string>
+    <string name="voice_input_language">识别语言</string>
+    <string name="voice_language_bilingual">中英双语</string>
+    <string name="voice_language_chinese_only">仅中文</string>
+    <string name="voice_language_english_only">仅英文</string>
+    <string name="voice_recognition_starting">正在启动语音识别…</string>
+    <string name="voice_recognition_listening">正在听取语音…</string>
+    <string name="voice_recognition_error">语音识别失败</string>
+    <string name="voice_permission_required">需要录音权限</string>
+    <string name="voice_permission_rationale">语音识别需要录音权限，请在设置中授权</string>
 </resources>

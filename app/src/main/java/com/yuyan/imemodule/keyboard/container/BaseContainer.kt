@@ -65,15 +65,28 @@ open class BaseContainer(@JvmField var mContext: Context, inputView: InputView) 
         }
         rootView.findViewById<View>(R.id.ll_keyboard_height_sure).setOnClickListener { removeView(rootView) }
         rootView.findViewById<View>(R.id.iv_keyboard_height_Top).setOnTouchListener { v12: View, event -> onModifyKeyboardHeightEvent(v12, event) }
-        if(EnvironmentSingleton.instance.keyboardModeFloat){
-            mBottomPaddingKey = if(EnvironmentSingleton.instance.isLandscape) AppPrefs.getInstance().internal.keyboardBottomPaddingLandscapeFloat
-            else AppPrefs.getInstance().internal.keyboardBottomPaddingFloat
-            mRightPaddingKey = if(EnvironmentSingleton.instance.isLandscape) AppPrefs.getInstance().internal.keyboardRightPaddingLandscapeFloat
-            else AppPrefs.getInstance().internal.keyboardRightPaddingFloat
-        } else {
-            mBottomPaddingKey = AppPrefs.getInstance().internal.keyboardBottomPadding
-            mRightPaddingKey = AppPrefs.getInstance().internal.keyboardRightPadding
+        
+        // 根据当前显示状态选择对应的 padding 偏好
+        val prefsInternal = AppPrefs.getInstance().internal
+        when (EnvironmentSingleton.instance.currentDisplayState) {
+            EnvironmentSingleton.DisplayState.PrimaryPortrait -> {
+                mBottomPaddingKey = prefsInternal.bottomPaddingPrimaryPortrait
+                mRightPaddingKey = prefsInternal.rightPaddingPrimaryPortrait
+            }
+            EnvironmentSingleton.DisplayState.SecondaryPortrait -> {
+                mBottomPaddingKey = prefsInternal.bottomPaddingSecondaryPortrait
+                mRightPaddingKey = prefsInternal.rightPaddingSecondaryPortrait
+            }
+            EnvironmentSingleton.DisplayState.SecondaryLandscape -> {
+                mBottomPaddingKey = prefsInternal.bottomPaddingSecondaryLandscape
+                mRightPaddingKey = prefsInternal.rightPaddingSecondaryLandscape
+            }
+            EnvironmentSingleton.DisplayState.SecondaryFullscreen -> {
+                mBottomPaddingKey = prefsInternal.bottomPaddingSecondaryFullscreen
+                mRightPaddingKey = prefsInternal.rightPaddingSecondaryFullscreen
+            }
         }
+        
         rootView.findViewById<View>(R.id.iv_keyboard_move).setOnTouchListener { _, event -> onMoveKeyboardEvent(event) }
     }
 
